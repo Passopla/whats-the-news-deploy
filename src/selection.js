@@ -129,7 +129,7 @@ export default class CategorySelectScene extends Phaser.Scene
                 const numColumns = 5;
                 const startY = 150;
                 const buttonSpacingY = 70;
-                const horizontalPadding = 60;
+                const horizontalPadding = 100;
 
                 const canvasWidth = this.sys.game.config.width;
                 const availableWidth = canvasWidth - (horizontalPadding * 2);
