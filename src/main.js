@@ -205,7 +205,7 @@ class NewsGame extends Phaser.Scene
 
             async fetchArticlesAndStart(loadingText) 
                 {
-                    const serverUrl = `/api/news?category=${this.selectedCategory}`;
+                    const serverUrl = `https://whats-the-news-deploy.vercel.app/api/news?category=${this.selectedCategory}`;
                     console.log(`Fetching from category: ${this.selectedCategory}`);
 
                     try 
