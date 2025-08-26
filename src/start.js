@@ -20,7 +20,7 @@ export default class StartScene extends Phaser.Scene
                     }).setOrigin(0.5);
 
                 // --- Game Description ---
-                const descriptionText = "Challenge your vocabulary by filling in the blank in real headlines from The Guardian. Or produce some fake news headlines of your own! It can geet pretty funny.\n All while learning what's going on in the world";
+                const descriptionText = "Challenge your vocabulary by filling in the blank in real headlines from The Guardian. Or produce some fake news headlines of your own! It can geet pretty funny.\n All while learning what's going on in the world today.";
                 this.add.text(400, 250, descriptionText, 
                     {
                         fontFamily: 'Arial',
