@@ -7,8 +7,8 @@ The game is built with a modern web stack, featuring a Phaser 3 front-end for th
 **Play the live version on [itch.io](https://your-itch-io-link-here.itch.io/whats-the-news)!** 
 *(Replace with your actual itch.io link)*
 
-<img width="1879/2" height="969/2" alt="Opera Snapshot_2025-09-02_015556_whats-the-news-deploy vercel app" src="https://github.com/user-attachments/assets/40cbad2b-c4fb-4062-9a00-5869e1e47067" />
-<img width="1879/2" height="969/2" alt="Opera Snapshot_2025-08-25_235007_localhost" src="https://github.com/user-attachments/assets/9acb049d-861a-4598-8007-77e1ce306a19" />
+<img width="1879/2" height="969" alt="Opera Snapshot_2025-09-02_015556_whats-the-news-deploy vercel app" src="https://github.com/user-attachments/assets/40cbad2b-c4fb-4062-9a00-5869e1e47067" />
+<img width="1879/2" height="969" alt="Opera Snapshot_2025-08-25_235007_localhost" src="https://github.com/user-attachments/assets/9acb049d-861a-4598-8007-77e1ce306a19" />
 
 
 ## Features
