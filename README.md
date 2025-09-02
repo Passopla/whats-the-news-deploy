@@ -47,12 +47,13 @@ To run this project on your local machine, follow these steps:
 
 #### 2. Clone the Repository
 
-git clone https://github.com/your-username/whats-the-news-deploy.git
-cd whats-the-news-deploy
+"git clone https://github.com/your-username/whats-the-news-deploy.git"
+"cd whats-the-news-deploy"
+
 3. Install Dependencies
 This will install all the necessary packages for both the front-end and the back-end.
 
-npm install
+"npm install"
 
 4. Set Up Environment Variables
 
@@ -60,19 +61,19 @@ Create a new file in the root of the project named .env.
 Add your Guardian API key and the API URL to this file:
 
 Env
-VITE_GUARDIAN_API_KEY="your-guardian-api-key-goes-here"
-VITE_GUARDIAN_API_URL="https://content.guardianapis.com/search"
+"VITE_GUARDIAN_API_KEY="your-guardian-api-key-goes-here""
+"VITE_GUARDIAN_API_URL="https://content.guardianapis.com/search""
 
 5. Run the Development Server
 This project uses Vercel's development tools to run the front-end and the serverless back-end simultaneously.
 
 # Install the Vercel CLI if you haven't already
 
-npm install -g vercel
+"npm install -g vercel"
 
 # Run the local development server
 
-vercel dev
+"vercel dev"
 
 This will start the Vite server and the serverless functions. You can now access the game in your browser at the local address provided (usually http://localhost:3000).
 
