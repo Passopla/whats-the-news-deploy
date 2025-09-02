@@ -5,6 +5,7 @@
 The game is built with a modern web stack, featuring a Phaser 3 front-end for the game client and a Node.js back-end (deployed serverless on Vercel) to securely handle API requests.
 
 **Play the live version on [itch.io](https://th3kwl3st.itch.io/whats-the-news)!**
+
 **Play the live version on [Vercel](https://whats-the-news-deploy.vercel.app)!**
 
 <img width="1879/2" height="969" alt="Opera Snapshot_2025-09-02_015556_whats-the-news-deploy vercel app" src="https://github.com/user-attachments/assets/40cbad2b-c4fb-4062-9a00-5869e1e47067" />
