@@ -1,14 +1,16 @@
 # What's The News?
 
-"What's The News?" is a fast-paced vocabulary game that challenges you to fill in the missing word in real headlines from around the globe. With a live feed of articles sourced directly from The Guardian's API, you can test your knowledge across a wide range of categories, from Technology and Science to Film and Art.
+"What's The News?" is a kind of vocabulary game that challenges you to fill in the missing word in real headlines from around the globe. With a live feed of articles sourced directly from The Guardian's API, you can test your knowledge across a wide range of categories, from Technology and Science to Film and Art.
 
-The game is built with a modern web stack, featuring a Phaser 3 front-end for the game client and a Node.js back-end (deployed as a serverless function on Vercel) to securely handle API requests.
+The game is built with a modern web stack, featuring a Phaser 3 front-end for the game client and a Node.js back-end (deployed serverless on Vercel) to securely handle API requests.
 
-**Play the live version on [itch.io](https://your-itch-io-link-here.itch.io/whats-the-news)!** 
-*(Replace with your actual itch.io link)*
+**Play the live version on [itch.io](https://th3kwl3st.itch.io/whats-the-news)!**
+**Play the live version on [Vercel](https://whats-the-news-deploy.vercel.app)!**
 
 <img width="1879/2" height="969" alt="Opera Snapshot_2025-09-02_015556_whats-the-news-deploy vercel app" src="https://github.com/user-attachments/assets/40cbad2b-c4fb-4062-9a00-5869e1e47067" />
 <img width="1879/2" height="969" alt="Opera Snapshot_2025-08-25_235007_localhost" src="https://github.com/user-attachments/assets/9acb049d-861a-4598-8007-77e1ce306a19" />
+<img width="1879/2" height="969" alt="Opera Snapshot_2025-08-25_214154_localhost" src="https://github.com/user-attachments/assets/f4f2007a-4982-446b-948a-165975581447" />
+<img width="1879/2" height="969" alt="Opera Snapshot_2025-08-25_214617_localhost" src="https://github.com/user-attachments/assets/bf5c2298-fbbd-4845-bab7-a82caa32f9e7" />
 
 
 ## Features
