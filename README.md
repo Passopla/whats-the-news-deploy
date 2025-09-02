@@ -86,7 +86,7 @@ Add the VITE_GUARDIAN_API_KEY and VITE_GUARDIAN_API_URL as environment variables
 Vercel will automatically build the front-end and deploy the api/news.js file as a serverless function.
 An alternative build for itch.io can be created by creating an itch branch, modifying the serverUrl in src/main.js to the live Vercel URL, and running npm run build.
 
-Acknowledgements
+## Acknowledgements
 This project would not be possible without the rich free APIs provided by:
 The Guardian for their comprehensive and accessible news API.
 Datamuse & Compromise for their powerful word-finding APIs.
