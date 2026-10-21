@@ -132,7 +132,8 @@ class NewsGame extends Phaser.Scene
                     this.articles = [];
                     this.currentArticleIndex = -1;
                     this.questionObjects = [];
-                    this.wordPoolByTag = {}; 
+                    this.wordPoolByTag = {};
+                    this.aiQuestions = {};
                     this.totalArticles = 0;
                 }
 
@@ -218,6 +219,8 @@ class NewsGame extends Phaser.Scene
                             if (data.response && data.response.status === "ok" && data.response.results) 
                                 {
                                     this.articles = data.response.results.filter(a => a.webTitle && a.webTitle.length > 30);
+                                    // AI-picked blanks + wrong options, keyed by article id. Missing when the AI is unavailable.
+                                    this.aiQuestions = data.questions || {};
 
                                     // Check if the filtered list of articles is empty.
                                     if (this.articles.length === 0) 
@@ -304,9 +307,22 @@ class NewsGame extends Phaser.Scene
                     if (article && article.webTitle) 
                         {
                             let words = article.webTitle.split(" ");
+                            const aiQuestion = this.aiQuestions[article.id];
+                            const aiWordIndex = aiQuestion ? words.findIndex(w => analyzeWord(w).word === aiQuestion.answer) : -1;
                             const validIndices = words.map((w, i) => analyzeWord(w).word.length >= 4 ? i : -1).filter(i => i !== -1);
-                            
-                            if (validIndices.length > 0) 
+
+                            if (aiWordIndex !== -1)
+                                {
+                                    // AI question: options fit the sentence, so wrong picks read as fake news.
+                                    this.missingWord = aiQuestion.answer;
+                                    words[aiWordIndex] = "_____";
+                                    this.headline = words.join(" ");
+
+                                    this.options = [aiQuestion.answer, ...aiQuestion.options].sort(() => Math.random() - 0.5);
+                                    this.buildQuestionUI();
+                                    validArticleFound = true;
+                                }
+                            else if (validIndices.length > 0)
                                 {
                                     const randomIndex = Math.floor(Math.random() * validIndices.length);
                                     const wordIndex = validIndices[randomIndex];
