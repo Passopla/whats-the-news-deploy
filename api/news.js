@@ -65,6 +65,9 @@ export default async function handler(req, res)
                             case 'business': sectionsToQuery = 'business'; break;
                             case 'science': sectionsToQuery = 'science'; break;
                             case 'wellness': sectionsToQuery = 'wellness'; break;
+                            case 'fashion': sectionsToQuery = 'fashion'; break;
+                            case 'opinion': sectionsToQuery = 'commentisfree'; break; // Guardian's id for Opinion
+                            case 'money': sectionsToQuery = 'money'; break;
                             case 'general':
                             default:
                                 sectionsToQuery = 'music|film|artanddesign|tv-and-radio';
