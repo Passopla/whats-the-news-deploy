@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
+import { generateQuestions } from './_questions.js';
 
 // This is the required Vercel serverless function signature.
 // It must be the default export.
@@ -72,11 +73,25 @@ export default async function handler(req, res)
                     fullGuardianUrl = `${apiUrl}?api-key=${apiKey}&page-size=50&show-fields=thumbnail,headline&section=${sectionsToQuery}`;
                 }
 
-        console.log('Fetching from Guardian API:', fullGuardianUrl);
+        // Log without the API key so it never ends up in the Vercel logs.
+        console.log('Fetching from Guardian API:', fullGuardianUrl.replace(apiKey, '***'));
 
         try {
                 const apiResponse = await fetch(fullGuardianUrl);
                 const data = await apiResponse.json();
+
+                // Ask the AI for blanks + wrong options. If it fails (e.g. credits ran out),
+                // questions is null and the game falls back to its own word-pool method.
+                const results = (data.response && data.response.results) || [];
+                const questions = await generateQuestions(results.filter(a => a.webTitle));
+                if (questions) data.questions = questions;
+
+                // Cache on Vercel's CDN: an hour with AI questions, 5 minutes without,
+                // so an outage or empty credit balance is retried soon.
+                res.setHeader('Cache-Control', questions
+                    ? 's-maxage=3600, stale-while-revalidate=86400'
+                    : 's-maxage=300');
+
                 // Use res.status().json() to send the response
                 res.status(200).json(data);
             } catch (error) 
