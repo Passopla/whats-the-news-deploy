@@ -96,7 +96,7 @@ export const CATEGORIES = [
     {
         label: 'Money',
         key: 'money',
-        description: 'Opinions Section.'
+        description: 'Personal finance and consumer news.'
     }
 ];
 
