@@ -32,8 +32,8 @@ const GAME_LAYOUTS =
     category: { y: 150, size: 28 },
     headline: { x: 40, y: 215, size: 34, wrap: 520 },
     options: { columns: [155, 445], width: 270, startY: 520, spacingY: 76, size: 30, padY: 12 },
-    result: { y: 925, size: 32 },
-    next: { y: 1010, size: 34, padX: 44, padY: 14 },
+    result: { y: 940, size: 30 },
+    next: { y: 1030, size: 34, padX: 44, padY: 14 },
     back: { y: 1130, size: 26, padX: 20, padY: 12 },
     message: { size: 32, endSize: 56 }
   }
