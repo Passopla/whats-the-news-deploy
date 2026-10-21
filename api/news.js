@@ -89,10 +89,12 @@ export default async function handler(req, res)
                 const questions = await generateQuestions(results.filter(a => a.webTitle));
                 if (questions) data.questions = questions;
 
-                // Cache on Vercel's CDN: an hour with AI questions, 5 minutes without,
-                // so an outage or empty credit balance is retried soon.
+                // Cache on Vercel's CDN. With AI questions: fresh for 6 hours, then served
+                // instantly while refreshing in the background (up to a week), so players
+                // rarely wait for the AI. Without: 5 minutes, so an outage or empty credit
+                // balance is retried soon.
                 res.setHeader('Cache-Control', questions
-                    ? 's-maxage=3600, stale-while-revalidate=86400'
+                    ? 's-maxage=21600, stale-while-revalidate=604800'
                     : 's-maxage=300');
 
                 // Use res.status().json() to send the response

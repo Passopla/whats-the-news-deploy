@@ -35,8 +35,12 @@ const QuestionSetSchema = z.object(
 const normalize = (rawWord) => (rawWord || '').toLowerCase().replace(/[.,'":;()‘’“”]/g, '');
 
 const client = process.env.ANTHROPIC_API_KEY
-    ? new Anthropic({ timeout: 25000, maxRetries: 1 })
+    ? new Anthropic({ timeout: 12000, maxRetries: 1 })
     : null;
+
+// Headlines per AI call. The calls run in parallel, so a category loads in
+// roughly the time of one small call instead of one 50-headline call.
+const CHUNK_SIZE = 10;
 
 // Returns { [articleId]: { answer, options } }, or null when the AI is unavailable
 // (no key, credits ran out, rate limited, timeout...). Callers fall back to the word-pool method.
@@ -44,6 +48,18 @@ export async function generateQuestions(articles)
     {
         if (!client || articles.length === 0) return null;
 
+        const chunks = [];
+        for (let i = 0; i < articles.length; i += CHUNK_SIZE) chunks.push(articles.slice(i, i + CHUNK_SIZE));
+
+        const results = await Promise.all(chunks.map(generateChunk));
+        if (results.every(r => r === null)) return null;
+
+        // A failed chunk just leaves those headlines on the word-pool method.
+        return Object.assign({}, ...results.filter(Boolean));
+    }
+
+async function generateChunk(articles)
+    {
         const headlineList = articles.map((a, i) => `${i}. ${a.webTitle}`).join('\n');
 
         try
@@ -51,7 +67,7 @@ export async function generateQuestions(articles)
                 const response = await client.messages.parse(
                     {
                         model: 'claude-haiku-5-5',
-                        max_tokens: 8000,
+                        max_tokens: 2500,
                         thinking: { type: 'disabled' },
                         output_config: { effort: 'low', format: zodOutputFormat(QuestionSetSchema) },
                         system: SYSTEM_PROMPT,
