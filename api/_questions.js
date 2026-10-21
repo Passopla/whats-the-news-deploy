@@ -10,13 +10,14 @@ const DISTRACTOR_COUNT = 9;
 const SYSTEM_PROMPT = `You write questions for "What's The News?", a fill-in-the-blank game built on real Guardian headlines.
 
 For each numbered headline:
-1. Pick ONE word to blank out. It must appear in the headline exactly as a single word, be at least 4 letters, and be a meaningful content word (noun, verb, adjective, name). Never pick articles, prepositions, conjunctions, pronouns or auxiliary verbs (e.g. "with", "from", "that", "have", "says").
+1. Pick ONE word to blank out. It must appear in the headline exactly as a single word, be at least 4 letters, and be a meaningful content word (noun, verb or adjective) that carries the story. Never pick people's names or other proper nouns, and never pick articles, prepositions, conjunctions, pronouns or auxiliary verbs (e.g. "with", "from", "that", "have", "says").
 2. Write ${DISTRACTOR_COUNT} wrong options. Every option must:
    - be a single word (no spaces), lowercase
    - match the blanked word's part of speech and grammatical form (same tense, same plural/singular, same possessive form)
-   - make the headline read as a grammatical, plausible-sounding but FAKE news headline. Funny or absurd is good; broken grammar is not.
+   - make the headline a grammatical, believable news headline that reports something different from the real story, so the player has to know or reason out what actually happened
    - not be a synonym that keeps the headline true
    - be different from each other and from the answer
+   Write them as a neutral news editor would: plausible and varied. Do not aim for jokes or absurdity.
 
 Return one entry per headline, using the headline's number as "index".`;
 
