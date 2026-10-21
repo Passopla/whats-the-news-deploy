@@ -1,43 +1,51 @@
-export default class StartScene extends Phaser.Scene 
+import { isPortrait } from './layout.js';
+
+export default class StartScene extends Phaser.Scene
     {
 
-        constructor() 
-                
+        constructor()
+
             {
                 // Key for this scene, which we will use to load it.
                 super("StartScene");
             }
 
-        create() 
+        create()
             {
+                const portrait = isPortrait(this);
+                const centerX = this.scale.width / 2;
+
                 // --- Game Title ---
-               this.add.text(400, 150, "What's The News?",
+               this.add.text(centerX, portrait ? 330 : 150, "What's The News?",
                     {
                         fontFamily: 'Georgia',
-                        fontSize: '52px',
+                        fontSize: portrait ? '56px' : '52px',
                         fill: '#ffffff',
-                        fontStyle: 'bold'
+                        fontStyle: 'bold',
+                        align: 'center',
+                        wordWrap: { width: this.scale.width - 40 }
                     }).setOrigin(0.5);
 
                 // --- Game Description ---
                 const descriptionText = "Challenge your vocabulary by filling in the blank in real headlines from The Guardian. Wrong choices produce fake news headlines, which can actually get pretty funny.\n All while learning what's going on in the world today.";
-                this.add.text(400, 250, descriptionText, 
+                this.add.text(centerX, portrait ? 590 : 250, descriptionText,
                     {
                         fontFamily: 'Arial',
-                        fontSize: '22px',
+                        fontSize: portrait ? '30px' : '22px',
                         fill: '#dddddd',
                         align: 'center',
-                        wordWrap: { width: 600 }
+                        lineSpacing: portrait ? 8 : 0,
+                        wordWrap: { width: portrait ? 500 : 600 }
                     }).setOrigin(0.5);
 
                  // --- Play Button ---
-                const playButton = this.add.text(400, 400, "Play", 
+                const playButton = this.add.text(centerX, portrait ? 860 : 400, "Play",
                     {
                         fontFamily: 'Arial',
-                        fontSize: '32px',
+                        fontSize: portrait ? '44px' : '32px',
                         fill: '#ffffff',
                         backgroundColor: '#009933', // green color
-                        padding: { left: 40, right: 40, top: 10, bottom: 10 }
+                        padding: portrait ? { left: 64, right: 64, top: 18, bottom: 18 } : { left: 40, right: 40, top: 10, bottom: 10 }
                     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
                 // --- Button Events ---

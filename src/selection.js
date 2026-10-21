@@ -100,7 +100,9 @@ export const CATEGORIES = [
     }
 ];
 
-export default class CategorySelectScene extends Phaser.Scene 
+import { isPortrait, fitButtonWidth } from './layout.js';
+
+export default class CategorySelectScene extends Phaser.Scene
     {
         constructor() 
             {
@@ -117,21 +119,25 @@ export default class CategorySelectScene extends Phaser.Scene
                         this.registry.set('sessionQuestionsAnswered', 0);
                     }
 
-                this.add.text(400, 50, "Choose a Category", 
-                    {   
+                const portrait = isPortrait(this);
+                const canvasWidth = this.scale.width;
+
+                this.add.text(canvasWidth / 2, portrait ? 90 : 50, "Choose a Category",
+                    {
                         fontFamily: 'Arial',
-                        fontSize: '40px',
+                        fontSize: portrait ? '48px' : '40px',
                         fill: '#fff',
                         fontStyle: 'bold'
                     }).setOrigin(0.5);
 
                 // --- Grid Layout Algorithm ---
-                const numColumns = 5;
-                const startY = 150;
-                const buttonSpacingY = 70;
-                const horizontalPadding = 100;
+                // Landscape: 5 columns x 4 rows. Portrait: 3 columns x 7 rows.
+                const numColumns = portrait ? 3 : 5;
+                const startY = portrait ? 220 : 150;
+                const buttonSpacingY = portrait ? 110 : 70;
+                const horizontalPadding = portrait ? 105 : 100;
+                const buttonWidth = portrait ? 180 : 140;
 
-                const canvasWidth = this.sys.game.config.width;
                 const availableWidth = canvasWidth - (horizontalPadding * 2);
                 const columnWidth = availableWidth / (numColumns - 1);
 
@@ -150,17 +156,18 @@ export default class CategorySelectScene extends Phaser.Scene
 
                         const button = this.add.text(buttonX, buttonY, category.label,
                             {
-                                fontSize: '18px',
+                                fontSize: portrait ? '26px' : '20px',
                                 fill: '#fff',
                                 backgroundColor: '#333',
-                                padding: 
-                                    { 
+                                padding:
+                                    {
                                         left: 10,
                                         right: 10,
-                                        top: 5,
-                                        bottom: 5
+                                        top: portrait ? 14 : 8,
+                                        bottom: portrait ? 14 : 8
                                     }
-                            }).setOrigin(0.5).setInteractive();
+                            }).setOrigin(0.5);
+                        fitButtonWidth(button, buttonWidth).setInteractive();
 
                         // --- CORRECTED EVENT HANDLERS ---
 
@@ -180,12 +187,13 @@ export default class CategorySelectScene extends Phaser.Scene
                     const linkStyle = 
                     {
                         fontFamily: 'Arial',
-                        fontSize: '12px',
+                        fontSize: portrait ? '22px' : '14px',
                         fill: '#fff', // link blue
+                        padding: { top: 10, bottom: 10 } // taller tap area
                     };
 
                     // 2. Create the text object at the bottom of the canvas.
-                    const sourceText = this.add.text(400, 550, "All articles sourced from TheGuardian.com", linkStyle)
+                    const sourceText = this.add.text(canvasWidth / 2, portrait ? 1120 : 555, "All articles sourced from TheGuardian.com", linkStyle)
                         .setOrigin(0.5)
                         .setInteractive({ useHandCursor: true });
 
