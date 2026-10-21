@@ -116,7 +116,7 @@ const UI_STYLES =
 const analyzeWord = (rawWord) => 
     {
         if (!rawWord) return{ tag: 'Noun', word: '' };
-        const word = rawWord.toLowerCase().replace(/[.,'":;()]/g, '');
+        const word = rawWord.toLowerCase().replace(/[.,'":;()‘’“”]/g, '');
         if (!word) return { tag: 'Noun', word: '' };
         const doc = nlp(word);
         const priorityTags = ['Plural', 'Possessive', 'PastTense', 'PresentTense', 'Infinitive', 'Comparative', 'Superlative'];
@@ -670,7 +670,7 @@ class NewsGame extends Phaser.Scene
                                 // this.updateLivesUI_ImageExample(); // Lives Sprite
                                 selectedButton.setBackgroundColor("#ff0000");
                                 const displayAnswer = this.missingWord.charAt(0).toUpperCase() + this.missingWord.slice(1);
-                                resultText = this.add.text(resultX, this.L.result.y, `❌ Incorrect! Answer: ${displayAnswer}`, { ...resultStyle, fill: "#f00" }).setOrigin(0.5);
+                                resultText = this.add.text(resultX, this.L.result.y, `❌ Incorrect! Answer: ${displayAnswer}`, { ...resultStyle, fill: "#ff6b6b" }).setOrigin(0.5);
 
                                 //Color the headline text red for an incorrect answer
                                 headlineTextObject.setColor("#ff4d4d"); // A soft red

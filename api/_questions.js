@@ -32,7 +32,7 @@ const QuestionSetSchema = z.object(
     });
 
 // Must match analyzeWord() in src/main.js so the client can find the answer in the headline.
-const normalize = (rawWord) => (rawWord || '').toLowerCase().replace(/[.,'":;()]/g, '');
+const normalize = (rawWord) => (rawWord || '').toLowerCase().replace(/[.,'":;()‘’“”]/g, '');
 
 const client = process.env.ANTHROPIC_API_KEY
     ? new Anthropic({ timeout: 25000, maxRetries: 1 })
