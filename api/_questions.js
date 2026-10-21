@@ -15,7 +15,7 @@ For each numbered headline:
    - be a single word (no spaces), lowercase
    - match the blanked word's part of speech and grammatical form (same tense, same plural/singular, same possessive form)
    - make the headline a grammatical, believable news headline that reports something different from the real story, so the player has to know or reason out what actually happened
-   - not be a synonym that keeps the headline true
+   - not be a synonym or near-synonym that keeps the headline true: a reader who knows the story must be able to rule out every wrong option
    - be different from each other and from the answer
    Write them as a neutral news editor would: plausible and varied. Do not aim for jokes or absurdity.
 
