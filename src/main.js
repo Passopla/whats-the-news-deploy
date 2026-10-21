@@ -1,6 +1,43 @@
 import StartScene from './start.js';
 import CategorySelectScene from './selection.js';
 import { CATEGORIES } from './selection.js';
+import { isPortrait, sizeForScreen, fitButtonWidth } from './layout.js';
+
+// Where everything sits on the game screen, per canvas shape (see layout.js).
+// Answers stay in two columns in both, so portrait feels like the landscape game.
+const GAME_LAYOUTS =
+{
+  landscape:
+  {
+    title: { x: 50, y: 20, size: 24, originX: 0 },
+    statFont: 20,
+    counter: { x: 400, y: 20 },
+    score: { x: 650, y: 20 },
+    lives: { x: 650, y: 50, originX: 0 },
+    category: { y: 65, size: 22 },
+    headline: { x: 50, y: 100, size: 22, wrap: 700 },
+    options: { columns: [230, 570], width: 300, startY: 190, spacingY: 50, size: 22, padY: 8 },
+    result: { y: 462, size: 24 },
+    next: { y: 512, size: 24, padX: 28, padY: 8 },
+    back: { y: 568, size: 18, padX: 14, padY: 6 },
+    message: { size: 24, endSize: 44 }
+  },
+  portrait:
+  {
+    title: { x: 300, y: 30, size: 36, originX: 0.5 },
+    statFont: 26,
+    counter: { x: 300, y: 95 },
+    score: { x: 30, y: 95 },
+    lives: { x: 570, y: 95, originX: 1 },
+    category: { y: 150, size: 28 },
+    headline: { x: 40, y: 215, size: 34, wrap: 520 },
+    options: { columns: [155, 445], width: 270, startY: 520, spacingY: 76, size: 30, padY: 12 },
+    result: { y: 925, size: 32 },
+    next: { y: 1010, size: 34, padX: 44, padY: 14 },
+    back: { y: 1130, size: 26, padX: 20, padY: 12 },
+    message: { size: 32, endSize: 56 }
+  }
+};
 
 const UI_STYLES = 
 {
@@ -135,6 +172,52 @@ class NewsGame extends Phaser.Scene
                     this.wordPoolByTag = {};
                     this.aiQuestions = {};
                     this.totalArticles = 0;
+                    this.answered = false;
+                    this.endMessage = null;
+
+                    // Set when the screen rotates mid-game, so the scene can redraw without refetching.
+                    this.resumeState = data && data.resume ? data.resume : null;
+                }
+
+            // Called on rotation: restart in the new layout, keeping articles and progress.
+            relayout()
+                {
+                    if (this.articles.length === 0)
+                        {
+                            this.scene.restart({ categoryKey: this.selectedCategory });
+                            return;
+                        }
+
+                    this.scene.restart(
+                        {
+                            categoryKey: this.selectedCategory,
+                            resume:
+                                {
+                                    articles: this.articles,
+                                    aiQuestions: this.aiQuestions,
+                                    wordPoolByTag: this.wordPoolByTag,
+                                    // An unanswered question is shown again; an answered one moves on.
+                                    nextIndex: this.answered ? this.currentArticleIndex : this.currentArticleIndex - 1,
+                                    endMessage: this.endMessage
+                                }
+                        });
+                }
+
+            resumeFrom(state)
+                {
+                    this.articles = state.articles;
+                    this.aiQuestions = state.aiQuestions;
+                    this.wordPoolByTag = state.wordPoolByTag;
+                    this.totalArticles = state.articles.length;
+
+                    if (state.endMessage)
+                        {
+                            this.showEndGameMessage(state.endMessage);
+                            return;
+                        }
+
+                    this.currentArticleIndex = state.nextIndex;
+                    this.displayNextQuestion();
                 }
 
 
@@ -146,7 +229,9 @@ class NewsGame extends Phaser.Scene
                 // If the text object doesn't exist yet, create it.
                 if (!this.livesText) 
                     {
-                        this.livesText = this.add.text(650, 50, `Lives: ${currentLives}`, UI_STYLES.lives);
+                        const { lives } = this.L;
+                        this.livesText = this.add.text(lives.x, lives.y, `Lives: ${currentLives}`, { ...UI_STYLES.lives, fontSize: `${this.L.statFont}px` })
+                            .setOrigin(lives.originX, 0);
                     } else 
                         {
                             // Otherwise, if it already exists, just update its text.
@@ -193,19 +278,31 @@ class NewsGame extends Phaser.Scene
 
             create() 
                 {
+                    // New object on every (re)start, so results from a fetch started
+                    // before a rotation can tell they are stale and be ignored.
+                    this.runId = {};
+                    this.L = isPortrait(this) ? GAME_LAYOUTS.portrait : GAME_LAYOUTS.landscape;
+
                     this.setupUI(); // Function to create all UI elements.
-                
-                    const loadingText = this.add.text(400, 300, "Loading headlines...",
+
+                    if (this.resumeState)
                         {
-                            fontSize: "20px",
+                            this.resumeFrom(this.resumeState);
+                            return;
+                        }
+
+                    const loadingText = this.add.text(this.scale.width / 2, this.scale.height / 2, "Loading headlines...",
+                        {
+                            fontSize: `${this.L.message.size}px`,
                             fill: "#fff"
                         }).setOrigin(0.5);
 
                     this.fetchArticlesAndStart(loadingText);
                 }
 
-            async fetchArticlesAndStart(loadingText) 
+            async fetchArticlesAndStart(loadingText)
                 {
+                    const runId = this.runId;
                     const serverUrl = `https://whats-the-news-deploy.vercel.app/api/news?category=${this.selectedCategory}`;
                     console.log(`Fetching from category: ${this.selectedCategory}`);
 
@@ -215,6 +312,7 @@ class NewsGame extends Phaser.Scene
                             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                             const data = await response.json();
+                            if (this.runId !== runId) return; // Scene restarted (rotation) while loading.
 
                             if (data.response && data.response.status === "ok" && data.response.results) 
                                 {
@@ -247,8 +345,9 @@ class NewsGame extends Phaser.Scene
                             {
                                 loadingText.setText("No news articles were found.");
                             }
-                        } catch (error) 
+                        } catch (error)
                             {
+                                if (this.runId !== runId) return;
                                 loadingText.setText("An error occurred. Is the server running?");
                             }
                 }
@@ -292,7 +391,7 @@ class NewsGame extends Phaser.Scene
                     // Check if we have run out of articles
                     if (this.currentArticleIndex >= this.articles.length)
                         {
-                            this.add.text(400, 300, 'Category complete!\nReturning to menu...', { fontSize: '24px', fill: '#fff', align: 'center' }).setOrigin(0.5);
+                            this.add.text(this.scale.width / 2, this.scale.height / 2, 'Category complete!\nReturning to menu...', { fontSize: `${this.L.message.size}px`, fill: '#fff', align: 'center' }).setOrigin(0.5);
                             
                             // Delay so the player can read the message, then go to next scene.
                             this.time.delayedCall(2000, () => {
@@ -331,7 +430,9 @@ class NewsGame extends Phaser.Scene
                                     words[wordIndex] = "_____";
                                     this.headline = words.join(" ");
                                     
+                                    const runId = this.runId;
                                     this.options = await this.generateOptions(this.missingWord, article, this.articles);
+                                    if (this.runId !== runId) return; // Scene restarted (rotation) meanwhile.
                                     this.buildQuestionUI();
                                     validArticleFound = true;
                                 }
@@ -427,31 +528,37 @@ class NewsGame extends Phaser.Scene
 
             setupUI()
                 {
-                    // Create each UI element using styles object
-                    this.add.text(50, 20, "What's The News?", UI_STYLES.title);
+                    const L = this.L;
+                    const canvasCenterX = this.scale.width / 2;
 
-                    this.questionCounterText = this.add.text(400, 20, "Question: 0 / 0", UI_STYLES.counter)
+                    // Create each UI element using styles object, sized for the current layout
+                    this.add.text(L.title.x, L.title.y, "What's The News?", { ...UI_STYLES.title, fontSize: `${L.title.size}px` })
+                        .setOrigin(L.title.originX, 0);
+
+                    this.questionCounterText = this.add.text(L.counter.x, L.counter.y, "Question: 0 / 0", { ...UI_STYLES.counter, fontSize: `${L.statFont}px` })
                         .setOrigin(0.5, 0);
+                    this.updateQuestionCounterText();
 
                     // 1. Create the score text object.
-                    this.scoreText = this.add.text(650, 20, "Score: 0", UI_STYLES.score);
+                    this.scoreText = this.add.text(L.score.x, L.score.y, "Score: 0", { ...UI_STYLES.score, fontSize: `${L.statFont}px` });
 
                     // 2. Call the update function to sync it with the registry data.
                     this.updateScoreText();
 
-                    const canvasCenterX = this.sys.game.config.width / 2;
-                    // Place it below the top row (e.g., at y=65)
-                    this.add.text(canvasCenterX, 65, this.selectedCategoryLabel, UI_STYLES.categoryTitle)
+                    // Place it below the top row
+                    this.add.text(canvasCenterX, L.category.y, this.selectedCategoryLabel, { ...UI_STYLES.categoryTitle, fontSize: `${L.category.size}px` })
                         .setOrigin(0.5, 0); // Center horizontally at the top of its box
 
                     // Creates and update lives text.
-                    this.updateLivesUI_Text(); 
+                    this.updateLivesUI_Text();
 
                     // The "Back to Categories" button
-                    const buttonX = this.sys.game.config.width / 2;
-                    const buttonY = 560;
-
-                    this.backToMenuButton = this.add.text(buttonX, buttonY, '<< Back to Categories', UI_STYLES.backButton)
+                    this.backToMenuButton = this.add.text(canvasCenterX, L.back.y, '<< Back to Categories',
+                        {
+                            ...UI_STYLES.backButton,
+                            fontSize: `${L.back.size}px`,
+                            padding: { left: L.back.padX, right: L.back.padX, top: L.back.padY, bottom: L.back.padY }
+                        })
                         .setOrigin(0.5)
                         .setInteractive();
 
@@ -463,17 +570,18 @@ class NewsGame extends Phaser.Scene
 
             buildQuestionUI()
                 {
-                    const headlineText = this.add.text(50, 100, this.headline, UI_STYLES.headline);
+                    const L = this.L;
+                    this.answered = false;
+
+                    const headlineText = this.add.text(L.headline.x, L.headline.y, this.headline,
+                        { ...UI_STYLES.headline, fontSize: `${L.headline.size}px`, wordWrap: { width: L.headline.wrap } });
                     this.questionObjects.push(headlineText);
-                    
-                    // 2 column layout logic
-                    const canvasCenterX = this.sys.game.config.width / 2;
-                    const columnSpacing = 350;
-                    const column1X = canvasCenterX - (columnSpacing / 2);
-                    const column2X = canvasCenterX + (columnSpacing / 2);
-                    const optionsPerColumn = this.options.length / 2;
-                    const startY = 200;
-                    const ySpacing = 50;
+
+                    // 2 column layout logic (both orientations)
+                    const [column1X, column2X] = L.options.columns;
+                    const optionsPerColumn = Math.ceil(this.options.length / 2);
+                    const startY = L.options.startY;
+                    const ySpacing = L.options.spacingY;
 
                     this.options.forEach((word, i) =>
                         {
@@ -484,7 +592,7 @@ class NewsGame extends Phaser.Scene
                                 {
                                     buttonX = column1X;
                                     rowIndex = i;
-                                } else 
+                                } else
                                     {
                                         buttonX = column2X;
                                         rowIndex = i - optionsPerColumn;
@@ -492,22 +600,22 @@ class NewsGame extends Phaser.Scene
 
                             const buttonY = startY + (rowIndex * ySpacing);
                             const displayWord = word.charAt(0).toUpperCase() + word.slice(1);
-                            
-                            const btn = this.add.text(buttonX, buttonY, displayWord, 
+
+                            const btn = this.add.text(buttonX, buttonY, displayWord,
                                 {
-                                    fontSize: "18px",
+                                    fontSize: `${L.options.size}px`,
                                     fill: "#fff",
                                     backgroundColor: "#000000",
                                     padding:
                                         {
                                             left: 10,
                                             right: 10,
-                                            top: 5,
-                                            bottom: 5
+                                            top: L.options.padY,
+                                            bottom: L.options.padY
                                         }
                                 })
-                            .setOrigin(0.5, 0)
-                            .setInteractive();
+                            .setOrigin(0.5, 0);
+                            fitButtonWidth(btn, L.options.width).setInteractive();
                         
                             btn.setData('originalWord', word); 
                             this.questionObjects.push(btn);
@@ -537,6 +645,10 @@ class NewsGame extends Phaser.Scene
                     // 3. Update its text.
                     headlineTextObject.setText(completedHeadline);
 
+                    this.answered = true;
+                    const resultStyle = { fontSize: `${this.L.result.size}px`, align: 'center', wordWrap: { width: this.scale.width - 60 } };
+                    const resultX = this.scale.width / 2;
+
                     let resultText;
                     if (selectedWord === this.missingWord)
                         {
@@ -544,7 +656,7 @@ class NewsGame extends Phaser.Scene
                             this.registry.set('sessionScore', this.score);
                             this.updateScoreText();
                             selectedButton.setBackgroundColor('#008000');
-                            resultText = this.add.text(400, 450, "✅ Correct!", { fontSize: "24px", fill: "#0f0" }).setOrigin(0.5);
+                            resultText = this.add.text(resultX, this.L.result.y, "✅ Correct!", { ...resultStyle, fill: "#0f0" }).setOrigin(0.5);
 
                             //Color the headline text green for a correct answer
                             headlineTextObject.setColor("#00ff00");
@@ -558,7 +670,7 @@ class NewsGame extends Phaser.Scene
                                 // this.updateLivesUI_ImageExample(); // Lives Sprite
                                 selectedButton.setBackgroundColor("#ff0000");
                                 const displayAnswer = this.missingWord.charAt(0).toUpperCase() + this.missingWord.slice(1);
-                                resultText = this.add.text(400, 450, `❌ Incorrect! Answer: ${displayAnswer}`, { fontSize: "24px", fill: "#f00" }).setOrigin(0.5);
+                                resultText = this.add.text(resultX, this.L.result.y, `❌ Incorrect! Answer: ${displayAnswer}`, { ...resultStyle, fill: "#f00" }).setOrigin(0.5);
 
                                 //Color the headline text red for an incorrect answer
                                 headlineTextObject.setColor("#ff4d4d"); // A soft red
@@ -582,17 +694,18 @@ class NewsGame extends Phaser.Scene
 
             showNextButton() 
                 {
-                    const nextButton = this.add.text(400, 520, "Next", 
+                    const { next } = this.L;
+                    const nextButton = this.add.text(this.scale.width / 2, next.y, "Next",
                         {
-                            fontSize: "22px",
+                            fontSize: `${next.size}px`,
                             fill: "#fff",
                             backgroundColor: "#111",
                             padding:
                                 {
-                                    left: 10,
-                                    right: 10,
-                                    top: 5,
-                                    bottom: 5
+                                    left: next.padX,
+                                    right: next.padX,
+                                    top: next.padY,
+                                    bottom: next.padY
                                 }
                         })
                     .setOrigin(0.5).setInteractive();
@@ -607,26 +720,31 @@ class NewsGame extends Phaser.Scene
                     if (this.backToMenuButton) this.backToMenuButton.destroy();
 
                     this.registry.set('sessionInProgress', false);
+                    this.endMessage = message;
 
-                    this.add.text(400, 300, message,
+                    const centerX = this.scale.width / 2;
+                    const centerY = this.scale.height / 2;
+                    const { next } = this.L;
+
+                    this.add.text(centerX, centerY, message,
                         {
-                            fontSize: "48px", 
-                            fill: "#ff4d4d", 
-                            align: 'center' 
+                            fontSize: `${this.L.message.endSize}px`,
+                            fill: "#ff4d4d",
+                            align: 'center',
+                            wordWrap: { width: this.scale.width - 80 }
                         }).setOrigin(0.5);
 
-                    const playAgainButton = this.add.text(400, 400, "Play Again", 
+                    const playAgainButton = this.add.text(centerX, centerY + next.size * 4, "Play Again",
                         {
-                            // Adjusted Y for better centering
-                            fontSize: "22px", 
-                            fill: "#fff", 
-                            backgroundColor: "#111", 
+                            fontSize: `${next.size}px`,
+                            fill: "#fff",
+                            backgroundColor: "#111",
                             padding:
                                 {
-                                    left: 10,
-                                    right: 10,
-                                    top: 5,
-                                    bottom: 5
+                                    left: next.padX,
+                                    right: next.padX,
+                                    top: next.padY,
+                                    bottom: next.padY
                                 }
                         })
                     .setOrigin(0.5).setInteractive();
@@ -635,14 +753,17 @@ class NewsGame extends Phaser.Scene
                 }
     }
 
-    const config = 
+    // Landscape canvas on wide screens, portrait canvas on phones held upright.
+    const initialSize = sizeForScreen();
+
+    const config =
         {
             type: Phaser.AUTO,
-            width: 800,
-            height: 600,
+            width: initialSize.width,
+            height: initialSize.height,
             backgroundColor: "#001BCF",
             scene: [StartScene, CategorySelectScene, NewsGame],
-            scale: 
+            scale:
                 {
                     mode: Phaser.Scale.FIT, // Fit the game to the parent container
                     autoCenter: Phaser.Scale.CENTER_BOTH // Center the game horizontally and vertically
@@ -650,4 +771,15 @@ class NewsGame extends Phaser.Scene
         };
 
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// When the device rotates (or the window changes shape), switch canvas shape
+// and redraw the running scene in its other layout.
+window.addEventListener('resize', () =>
+    {
+        const size = sizeForScreen();
+        if (size.width === game.scale.width) return;
+
+        game.scale.setGameSize(size.width, size.height);
+        game.scene.getScenes(true).forEach(scene => scene.relayout ? scene.relayout() : scene.scene.restart());
+    });
