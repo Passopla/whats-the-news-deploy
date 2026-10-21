@@ -1,0 +1,58 @@
+# Builds the game and uploads it to itch.io with butler whenever the itch branch changes.
+#
+# One-time setup in GitHub (repo Settings -> Secrets and variables -> Actions):
+#   Secret   BUTLER_API_KEY  - from https://itch.io/user/settings/api-keys
+#   Variable ITCH_GAME       - "<itch username>/<game url name>", e.g. passopla/whats-the-news
+name: Upload to itch.io
+
+on:
+  push:
+    branches: [itch]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/itch.yml'
+  workflow_dispatch: # "Run workflow" button in the Actions tab
+
+concurrency:
+  group: itch-upload
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build
+        run: |
+          npm ci
+          npx vite build
+
+      - name: Install butler
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler
+          chmod +x butler/butler
+          butler/butler -V
+
+      - name: Push to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+          ITCH_GAME: ${{ vars.ITCH_GAME }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ] || [ -z "$ITCH_GAME" ]; then
+            echo "::error::Set the BUTLER_API_KEY secret and ITCH_GAME variable (see the top of this file)."
+            exit 1
+          fi
+          # The html5 channel holds the browser build; dist/ has index.html at its root.
+          butler/butler push dist "$ITCH_GAME:html5" --userversion "$(git rev-parse --short HEAD)"
